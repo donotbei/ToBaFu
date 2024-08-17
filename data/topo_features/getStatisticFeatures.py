@@ -2,30 +2,24 @@ import csv
 import os
 import numpy as np
 import cv2
-import pandas as pd
 
 from gudhi.cubical_complex import CubicalComplex
 
 
 def img_persistence(img_path):
-    # 读取3通道tif影像
     img = cv2.imread(img_path)
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     h, w, c = img.shape
-
     arr = np.array(img)
     persistence = []
-    per_0, per_1 = [], []
-    for j in range(c):
-        # 图像数据分通道处理
-        channel = arr[:, :, c - j - 1]
 
+    for j in range(c):
+        channel = arr[:, :, c - j - 1]
         # 计算持续同调
         bcc = CubicalComplex(top_dimensional_cells=channel.flatten(), dimensions=[w, h])
         # 显示各维条码的出生死亡时间
         persistence.append(bcc.persistence())
 
-    return persistence # [2, 1, 0]
+    return persistence
 
 
 def topo_feature(persistence):
@@ -93,23 +87,20 @@ def topo_feature(persistence):
         D1mean = D1total / n1 if n1 > 0 else 0
         # 1维条码像素持续值的均值
         P1mean = P1total / n1 if n1 > 0 else 0
-
         # 单通道的30个拓扑特征
         topo_feature += [n, n0, n1, B0min, B0mean, B1min, B1mean, D1mean, P1mean, P1max] + dim0_n + dim1_n
 
     return topo_feature
 
 
-def topo_features(save_path):
-    # 读取所有图片
-    image_categories = os.listdir('CRC_5000')
-    image_categories.sort() # ['01_TUMOR', '02_STROMA', '03_COMPLEX', '04_LYMPHO', '05_DEBRIS', '06_MUCOSA']
+def topo_features_S(data_dir, save_path):
+    image_categories = os.listdir(data_dir)
+    image_categories.sort()
     if '.DS_Store' in image_categories:
         image_categories.remove('.DS_Store')
 
     topo_features = []
-    for category in image_categories:
-        label = int(category.split('_')[0]) # 01, TUMOR
+    for label, category in enumerate(image_categories):
         category_path = os.path.join('CRC_5000', category)
         image_files = os.listdir(category_path)
         if '.DS_Store' in image_files:
@@ -126,25 +117,21 @@ def topo_features(save_path):
             topo_features.append([image_path] + topo_feature(image_persistence) + [label])
             print(f'Image {image_path} processed')
 
-    # 将特征和图片路径保存到csv文件
     with open(save_path, 'w', newline='') as csvfile:
-        # 特征名称
         # 0维条码出生像素值的分布特征
         dim0_names = ['dim0_n' + str(i * 30) for i in range(1, 11)]
         dim0_names[-2], dim0_names[-1] = 'dim0_nlarger', 'dim0_P10'
         # 1维条码出生像素值的分布特征
         dim1_names = ['dim1_n' + str(i * 30) for i in range(1, 11)]
         dim1_names[-2], dim1_names[-1] = 'dim1_nlarger', 'dim1_P10'
-        # 30个拓扑特征名称
+
         feature_names = ['n', 'n0', 'n1', 'B0min', 'B0mean', 'B1min', 'B1mean', 'D1mean', 'P1mean', 'P1max']
         feature_names += dim0_names + dim1_names
 
-        # 特征名称写入文件
         writer = csv.writer(csvfile)
         feature_names = ['image_path'] + feature_names * 3 + ['label']
         writer.writerow(feature_names)
 
-        # 特征写入文件
         for feature in topo_features:
             writer.writerow(feature)
 
@@ -153,19 +140,5 @@ def topo_features(save_path):
 
 
 if __name__ == '__main__':
-    save_path = 'CRC_5000.csv'
-    topo_features(save_path)
-
-
-# img_path = 'image_data/01_TUMOR/tumor (1).tif'
-# img = cv2.imread(img_path)
-# channel1 = np.array(img)[:, :, 1]
-# bcc = CubicalComplex(top_dimensional_cells=channel1.flatten(), dimensions=[150, 150])
-# persistence = bcc.persistence()
-
-
-
-
-
-
-
+    topo_features_S('../CRC_5000', 'CRC5000_S.csv')
+    topo_features_S('../BUS250', 'BUS250_S.csv')
