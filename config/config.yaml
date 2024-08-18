@@ -1,4 +1,4 @@
-root_dir: /home/um202270017/my_data/ToBaFu
+root_dir: /home/my_data/ToBaFu
 dataset: CRC5000
 topo_feature: CRC5000_F
 
