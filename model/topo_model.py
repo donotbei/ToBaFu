@@ -1,38 +1,37 @@
 import torch.nn as nn
 
 
-# 定义线性特征输入的残差块
+# Define the residual block for linear input
 class LinearResidualBlock(nn.Module):
     def __init__(self, input_size, hidden_size):
         super(LinearResidualBlock, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.relu = nn.ReLU(inplace=True)
+        self.gelu = nn.GELU()
 
     def forward(self, x):
         out = self.fc1(x)
-        out = self.relu(out)
+        out = self.gelu(out)
         out = self.fc2(out)
-        out += x  # 跳跃连接
-        out = self.relu(out)
+        out += x
+        out = self.gelu(out)
         return out
 
 
-# 定义线性特征输入的残差网络
+# Define the linear ResNet model
 class LinearResNet(nn.Module):
     def __init__(self, input_size, hidden_size, num_blocks, num_classes, dropout_rate):
         super(LinearResNet, self).__init__()
         self.TopoNet = nn.Sequential()
         self.TopoNet.add_module('fc', nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.ReLU(inplace=True),
+            nn.GELU(),
         ))
 
         self.TopoNet.add_module('res_blocks', self.make_blocks(hidden_size, num_blocks))
         self.TopoNet.add_module('fc_out', nn.Sequential(
             nn.Linear(hidden_size, num_classes),
             nn.Dropout(dropout_rate),
-            nn.Softmax(dim=1),
         ))
 
     def make_blocks(self, hidden_size, num_blocks):

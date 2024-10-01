@@ -13,10 +13,10 @@ from data.dataset import TopoDataset, PairedDatasetWithSharedLabels, ImgDataset
 
 def delete_sparse_features(data, zero_count_threshold):
     """
-    根据特征列零的个数删除稀疏特征
-    :param data: 特征数据 (DataFrame)
-    :param zero_count_threshold: 零的个数阈值 (int)
-    :return: 删除稀疏特征后的特征数据 (DataFrame)
+    according to the number of zeros in each column, delete the sparse features
+    :param data: feature data (DataFrame)
+    :param zero_count_threshold: the number of zeros threshold (int)
+    :return: filtered data (DataFrame)
     """
     columns_to_keep = np.sum(data == 0, axis=0) <= zero_count_threshold
     filtered_data = data.loc[:, columns_to_keep]
@@ -25,13 +25,13 @@ def delete_sparse_features(data, zero_count_threshold):
 
 def prepare_data(config):
     """
-    准备数据
-    :param config: 配置信息 (dict)
-    # :param zero_count_threshold: 零的个数阈值 (int)
-    # :param train_size: 训练集占比 (float)
-    # :param feature_info_path: 特征信息文件路径 (str)
-    # :param data_dir: 数据目录路径 (str)
-    :return: 训练集和测试集 (DataFrame)
+    prepare data
+    :param config: configuration information (dict)
+    # :param zero_count_threshold: the number of zeros threshold (int)
+    # :param train_size: the proportion of training set (float)
+    # :param feature_info_path: the path of feature information (str)
+    # :param data_dir: the directory of data (str)
+    :return: train data and test data (DataFrame)
     """
     feature_info_path = config['feature_info']
     data_info = pd.read_csv(feature_info_path)
@@ -39,16 +39,16 @@ def prepare_data(config):
 
     data_info = delete_sparse_features(data_info, config['zero_count_threshold'])
 
-    # 把特征数据类型转化成float
+    # change the data type of features to float32
     for col in data_info.columns[1:-1]:
         data_info[col] = data_info[col].astype('float32')
 
     train_data, test_data = None, None
     for label, group in data_info.groupby('label'):
         group_size = len(group)
-        # 打乱数据
+        # random shuffle
         group = group.sample(frac=1).reset_index(drop=True)
-        # 按比例划分训练集和测试集
+        # split the data into training set and test set
         train_group = group[:int(train_size * group_size)]
         test_group = group[int(train_size * group_size):]
 
@@ -59,7 +59,7 @@ def prepare_data(config):
             train_data = pd.concat([train_data, train_group])
             test_data = pd.concat([test_data, test_group])
 
-    # 对特征进行标准化
+    # standardize the features
     all_features = pd.concat((train_data.iloc[:, 1:-1], test_data.iloc[:, 1:-1]))
     scaler = StandardScaler()
     all_features = scaler.fit_transform(all_features)
@@ -67,25 +67,21 @@ def prepare_data(config):
     train_data.iloc[:, 1:-1] = all_features[:n_train]
     test_data.iloc[:, 1:-1] = all_features[n_train:]
 
-    # 对标签进行编码
+    # label encoding
     label_encoder = LabelEncoder()
     train_data['label'] = label_encoder.fit_transform(train_data['label'])
     test_data['label'] = label_encoder.transform(test_data['label'])
-
-    # # 查看训练集和测试集各类别的数量
-    # print(f'Train set: \n{train_data["label"].value_counts()}')
-    # print(f'Test set: \n{test_data["label"].value_counts()}')
 
     return train_data, test_data
 
 
 def get_dataloader(data, config, datatype):
     """
-    获取数据加载器
-    :param data: 数据 (DataFrame)
-    :param config: 配置信息 (dict)
-    :param datatype: 数据类型 (str)
-    :return: 数据加载器
+    get data loader
+    :param data: data (DataFrame)
+    :param config: configuration information (dict)
+    :param datatype: data type (str)
+    :return: data loader
     """
     data_dir = config['data_dir']
     image_paths = data['image_path']
@@ -99,17 +95,17 @@ def get_dataloader(data, config, datatype):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         images.append(img)
 
-    # 定义图像增强变换
+    # data augmentation
     train_transform = transforms.Compose([
-        transforms.ToPILImage(),  # 转换为PIL图像
-        transforms.RandomHorizontalFlip(),  # 随机水平翻转
-        transforms.RandomVerticalFlip(),  # 随机垂直翻转
-        transforms.RandomRotation(15),  # 随机旋转15度
-        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),  # 随机裁剪并调整大小
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # 颜色抖动
-        transforms.ToTensor(),  # 转换为张量
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),  # 归一化
-        transforms.RandomErasing(p=0.5, scale=(0.02, 0.1), ratio=(0.3, 3.3))  # 随机擦除
+        transforms.ToPILImage(),  # convert to PIL image
+        transforms.RandomHorizontalFlip(),  # random horizontal flip
+        transforms.RandomVerticalFlip(),  # random vertical flip
+        transforms.RandomRotation(15),  # random rotation
+        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),  # random resized crop
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # color jitter
+        transforms.ToTensor(),  # convert to tensor
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),  # normalize
+        transforms.RandomErasing(p=0.5, scale=(0.02, 0.1), ratio=(0.3, 3.3))  # random erasing
     ])
     transform = transforms.Compose([
         transforms.ToPILImage(),
@@ -135,9 +131,9 @@ def get_dataloader(data, config, datatype):
 
 def read_data(datatype):
     """
-    读取数据
-    :param datatype: 数据类型 (str)
-    :return: 训练集和测试集的数据加载器
+    read data
+    :param datatype: data type (str)
+    :return: data loader
     """
     config = OmegaConf.load('config/config.yaml')['data']
     train_data, test_data = prepare_data(config)

@@ -36,12 +36,12 @@ class PairedDatasetWithSharedLabels(Dataset):
         self.labels = labels
         self.transform = transform
 
-        # 确保两个数据集的长度和标签的长度相同
-        assert len(self.data1) == len(self.data2) == len(self.labels), "数据集和标签的长度必须相同"
+        # check if the length of data1, data2 and labels are the same
+        assert len(self.data1) == len(self.data2) == len(self.labels), "data1, data2 and labels must have the same length"
 
     def __len__(self):
         """
-        返回数据集的长度
+        return the length of the dataset
         """
         return len(self.labels)
 

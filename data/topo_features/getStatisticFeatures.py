@@ -14,9 +14,8 @@ def img_persistence(img_path):
 
     for j in range(c):
         channel = arr[:, :, c - j - 1]
-        # 计算持续同调
+        # calculate the persistent homology
         bcc = CubicalComplex(top_dimensional_cells=channel.flatten(), dimensions=[w, h])
-        # 显示各维条码的出生死亡时间
         persistence.append(bcc.persistence())
 
     return persistence
@@ -34,30 +33,28 @@ def topo_feature(persistence):
         dim0_n = [0 for _ in range(10)]
         dim1_n = [0 for _ in range(10)]
         birth_intervals = [30, 60, 90, 120, 150, 180, 210, 240]
-        for dim, k in channel_persistence: # (dim, (birth, death))
+        for dim, k in channel_persistence:
             birth, death = k
             life = death - birth
 
-            # 分维度条码数量
+            # number of 0, 1 dimensional features
             n += 1
             n0 += 1 if dim == 0 else 0
             n1 += 1 if dim == 1 else 0
 
-            # 0维条码出生像素值的最小值和总和
+            # sum of birth pixel values of 0, 1 dimensional features
             B0min = min(B0min, birth) if dim == 0 else B0min
             B0total += birth if dim == 0 else 0
-
-            # 1维条码出生像素值的最小值和总和
             B1min = min(B1min, birth) if dim == 1 else B1min
             B1total += birth if dim == 1 else 0
-            # 1维条码死亡像素值的总和
+            # sum of death pixel values of 1 dimensional features
             D1total += death if dim == 1 else 0
 
-            # 1维条码像素持续值的最大值和总和
+            # sum of life pixel values of 1 dimensional features
             P1max = max(P1max, life) if dim == 1 else P1max
             P1total += life if dim == 1 else 0
 
-            # 0维出生像素值的分布
+            # distribution of birth pixel values of 0, 1 dimensional features
             if dim == 0:
                 for i, upper_limit in enumerate(birth_intervals):
                     if birth <= upper_limit:
@@ -69,7 +66,6 @@ def topo_feature(persistence):
                 if life >= 10:
                     dim0_n[9] += 1
 
-            # 1维出生像素值的分布
             if dim == 1:
                 for i, upper_limit in enumerate(birth_intervals):
                     if birth <= upper_limit:
@@ -81,13 +77,12 @@ def topo_feature(persistence):
                 if life >= 10:
                     dim1_n[9] += 1
 
-        # 0维, 1维条码出生像素值的均值
+        # mean of birth pixel values of 0, 1 dimensional features
         B0mean, B1mean = B0total / n0 if n0 > 0 else 0, B1total / n1 if n1 > 0 else 0
-        # 1维条码死亡像素值的均值
+        # mean of death, life pixel values of 1 dimensional features
         D1mean = D1total / n1 if n1 > 0 else 0
-        # 1维条码像素持续值的均值
         P1mean = P1total / n1 if n1 > 0 else 0
-        # 单通道的30个拓扑特征
+        # 30 topo features of single channel
         topo_feature += [n, n0, n1, B0min, B0mean, B1min, B1mean, D1mean, P1mean, P1max] + dim0_n + dim1_n
 
     return topo_feature
@@ -108,20 +103,20 @@ def topo_features_S(data_dir, save_path):
         image_files.sort()
 
         for image_file in image_files:
-            # 读取图片持续同调
+            # get the persistence of the image
             img_path = os.path.join(category_path, image_file)
             image_persistence = img_persistence(img_path)
 
-            # 获取图片的拓扑特征
+            # get the topo features of the image
             image_path = os.path.join(category, image_file)
             topo_features.append([image_path] + topo_feature(image_persistence) + [label])
             print(f'Image {image_path} processed')
 
     with open(save_path, 'w', newline='') as csvfile:
-        # 0维条码出生像素值的分布特征
+        # dimension names of birth pixel values of 0, 1 dimensional features
         dim0_names = ['dim0_n' + str(i * 30) for i in range(1, 11)]
         dim0_names[-2], dim0_names[-1] = 'dim0_nlarger', 'dim0_P10'
-        # 1维条码出生像素值的分布特征
+
         dim1_names = ['dim1_n' + str(i * 30) for i in range(1, 11)]
         dim1_names[-2], dim1_names[-1] = 'dim1_nlarger', 'dim1_P10'
 

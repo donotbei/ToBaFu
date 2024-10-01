@@ -18,7 +18,7 @@ def img_suffixes(img_path):
 
     for j in range(c):
         channel = arr[:, :, c - j - 1]
-        # 计算持续同调
+        # calculate the persistent homology
         bcc = CubicalComplex(top_dimensional_cells=channel.flatten(), dimensions=[w, h])
 
         persistence.append(bcc.persistence())
