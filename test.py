@@ -3,119 +3,156 @@ import os
 import torch
 from omegaconf import OmegaConf
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
-from torch import nn
+from torch.nn import functional as F
 
 from data.utils import read_data
 
 
-def test_fusion_model(
-        model1,
-        model2,
-        test_loader,
-        loss=nn.CrossEntropyLoss(),
-        device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        save_path=None,
-        pool_method=None,
-):
-    model1.eval()
-    model2.eval()
+def test_fusion_model(TOPOmodel,
+                      ResNetmodel,
+                      test_loader,
+                      device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
+                      save_path=None):
 
-    # test the model
-    test_loss = test_loss1 = test_loss2 = 0
-    correct = correct1 = correct2 = 0
+    TOPOmodel.eval()
+    ResNetmodel.eval()
+
+    best_accuracy = 0.0
+    best_weight_topo = 0.0
+    best_weight_img = 0.0
+    best_results = {}
+
+    weight_range = torch.linspace(0, 1, steps=21)
+
     with torch.no_grad():
-        for data, target in test_loader:
-            X1, X2 = data
-            X1, X2, target = X1.to(device), X2.to(device), target.to(device)
-            output1 = model1(X1)
-            output2 = model2(X2)
-            if pool_method == 'average':
-                output = (output1 + output2) / 2
-            elif pool_method == 'max':
-                output = torch.max(output1, output2)
-            test_loss += loss(output, target).item()
-            test_loss1 += loss(output1, target).item()
-            test_loss2 += loss(output2, target).item()
-            pred = output.argmax(dim=1, keepdim=True)
-            pred1 = output1.argmax(dim=1, keepdim=True)
-            pred2 = output2.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-            correct1 += pred1.eq(target.view_as(pred1)).sum().item()
-            correct2 += pred2.eq(target.view_as(pred2)).sum().item()
-    # get the confusion matrix
-    conf_mat = confusion_matrix(target.cpu().numpy(), pred.cpu().numpy())
-    conf_mat1 = confusion_matrix(target.cpu().numpy(), pred1.cpu().numpy())
-    conf_mat2 = confusion_matrix(target.cpu().numpy(), pred2.cpu().numpy())
+        for weight_img in weight_range:
+            weight_topo = 1.0 - weight_img
 
-    # get the test loss
-    data_size = len(test_loader.dataset)
-    test_loss /= data_size
-    test_loss1 /= data_size
-    test_loss2 /= data_size
+            correct_combined = 0
+            correct_topo = 0
+            correct_img = 0
+            total = 0
 
-    # get the F1 score
-    f1 = f1_score(target.cpu().numpy(), pred.cpu().numpy(), average='weighted')
-    f1_1 = f1_score(target.cpu().numpy(), pred1.cpu().numpy(), average='weighted')
-    f1_2 = f1_score(target.cpu().numpy(), pred2.cpu().numpy(), average='weighted')
+            all_targets = []
+            all_preds_combined = []
+            all_preds_topo = []
+            all_preds_img = []
 
-    # get the precision
-    precision = precision_score(target.cpu().numpy(), pred.cpu().numpy(), average='weighted')
-    precision1 = precision_score(target.cpu().numpy(), pred1.cpu().numpy(), average='weighted')
-    precision2 = precision_score(target.cpu().numpy(), pred2.cpu().numpy(), average='weighted')
+            test_loss_combined = 0.0
+            test_loss_topo = 0.0
+            test_loss_img = 0.0
 
-    # get the recall
-    recall = recall_score(target.cpu().numpy(), pred.cpu().numpy(), average='weighted')
-    recall1 = recall_score(target.cpu().numpy(), pred1.cpu().numpy(), average='weighted')
-    recall2 = recall_score(target.cpu().numpy(), pred2.cpu().numpy(), average='weighted')
+            for data, target in test_loader:
+                X1, X2 = data
+                X1, X2, target = X1.to(device), X2.to(device), target.to(device)
+                output1 = TOPOmodel(X1)
+                output2 = ResNetmodel(X2)
 
-    # print test sets: Confusion Matrix, F1 score, Precision, Recall
-    print(f'Fusion Model: \n {conf_mat} \n F1: {f1:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}')
-    print(f'TOPOmodel: \n {conf_mat1} \n F1: {f1_1:.4f}, Precision: {precision1:.4f}, Recall: {recall1:.4f}')
-    print(f'IMAGEmodel: \n {conf_mat2} \n F1: {f1_2:.4f}, Precision: {precision2:.4f}, Recall: {recall2:.4f}')
+                output1 = F.softmax(output1, dim=1)
+                output2 = F.softmax(output2, dim=1)
 
-    # print Three test set: Average loss and Accuracy
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss, correct, data_size,
-        100. * correct / data_size))
-    print('\nTOPOmodel Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss1, correct1, data_size,
-        100. * correct1 / data_size))
-    print('\nIMAGEmodel Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss2, correct2, data_size,
-        100. * correct2 / data_size))
+                combined_output = weight_topo * output1 + weight_img * output2
 
-    # save the results
+                loss_combined = F.cross_entropy(combined_output, target)
+                loss_topo = F.cross_entropy(output1, target)
+                loss_img = F.cross_entropy(output2, target)
+
+                test_loss_combined += loss_combined.item()
+                test_loss_topo += loss_topo.item()
+                test_loss_img += loss_img.item()
+
+                _, predicted_combined = torch.max(combined_output.data, 1)
+                _, predicted_topo = torch.max(output1.data, 1)
+                _, predicted_img = torch.max(output2.data, 1)
+
+                total += target.size(0)
+                correct_combined += (predicted_combined == target).sum().item()
+                correct_topo += (predicted_topo == target).sum().item()
+                correct_img += (predicted_img == target).sum().item()
+
+                all_targets.extend(target.cpu().numpy())
+                all_preds_combined.extend(predicted_combined.cpu().numpy())
+                all_preds_topo.extend(predicted_topo.cpu().numpy())
+                all_preds_img.extend(predicted_img.cpu().numpy())
+
+            accuracy_combined = 100 * correct_combined / total
+            accuracy_topo = 100 * correct_topo / total
+            accuracy_img = 100 * correct_img / total
+
+            if accuracy_combined > best_accuracy:
+                best_accuracy = accuracy_combined
+                best_weight_topo = weight_topo.item()
+                best_weight_img = weight_img.item()
+
+                best_results = {
+                    'conf_mat_combined': confusion_matrix(all_targets, all_preds_combined),
+                    'f1_combined': f1_score(all_targets, all_preds_combined, average='weighted'),
+                    'precision_combined': precision_score(all_targets, all_preds_combined, average='weighted'),
+                    'recall_combined': recall_score(all_targets, all_preds_combined, average='weighted'),
+                    'test_loss_combined': test_loss_combined / total,
+                    'accuracy_combined': accuracy_combined,
+
+                    'conf_mat_topo': confusion_matrix(all_targets, all_preds_topo),
+                    'f1_topo': f1_score(all_targets, all_preds_topo, average='weighted'),
+                    'precision_topo': precision_score(all_targets, all_preds_topo, average='weighted'),
+                    'recall_topo': recall_score(all_targets, all_preds_topo, average='weighted'),
+                    'test_loss_topo': test_loss_topo / total,
+                    'accuracy_topo': accuracy_topo,
+
+                    'conf_mat_img': confusion_matrix(all_targets, all_preds_img),
+                    'f1_img': f1_score(all_targets, all_preds_img, average='weighted'),
+                    'precision_img': precision_score(all_targets, all_preds_img, average='weighted'),
+                    'recall_img': recall_score(all_targets, all_preds_img, average='weighted'),
+                    'test_loss_img': test_loss_img / total,
+                    'accuracy_img': accuracy_img,
+                }
+
     with open(save_path, 'w') as f:
-        f.write('Confusion Matrix: \n' + str(conf_mat) + '\n')
-        f.write('F1: {:.4f}, Precision: {:.4f}, Recall: {:.4f}\n'.format(f1, precision, recall))
-        f.write('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-            test_loss, correct, data_size, 100. * correct / data_size))
-        f.write('\nTOPOmodel Confusion Matrix: \n' + str(conf_mat1) + '\n')
-        f.write('F1: {:.4f}, Precision: {:.4f}, Recall: {:.4f}\n'.format(f1_1, precision1, recall1))
-        f.write('\nTOPOmodel Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-            test_loss1, correct1, data_size, 100. * correct1 / data_size))
-        f.write('\nIMAGEmodel Confusion Matrix: \n' + str(conf_mat2) + '\n')
-        f.write('F1: {:.4f}, Precision: {:.4f}, Recall: {:.4f}\n'.format(f1_2, precision2, recall2))
-        f.write('\nIMAGEmodel Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-            test_loss2, correct2, data_size, 100. * correct2 / data_size))
+        f.write(f'Best Test Accuracy: {best_accuracy:.2f}%\n')
+        f.write(f'Weight_topo: {best_weight_topo:.2f}\n')
+        f.write(f'Weight_img: {best_weight_img:.2f}\n')
+        f.write(f'\nCombined Model: \nConfusion Matrix: \n{best_results["conf_mat_combined"]}\n')
+        f.write(f'F1: {best_results["f1_combined"]:.4f}, Precision: {best_results["precision_combined"]:.4f}, Recall: {best_results["recall_combined"]:.4f}\n')
+        f.write(f'Average loss: {best_results["test_loss_combined"]:.4f}, Accuracy: {best_results["accuracy_combined"]:.2f}%\n')
+
+        f.write(f'\nTOPO model: \nConfusion Matrix: \n{best_results["conf_mat_topo"]}\n')
+        f.write(f'F1: {best_results["f1_topo"]:.4f}, Precision: {best_results["precision_topo"]:.4f}, Recall: {best_results["recall_topo"]:.4f}\n')
+        f.write(f'Average loss: {best_results["test_loss_topo"]:.4f}, Accuracy: {best_results["accuracy_topo"]:.2f}%\n')
+
+        f.write(f'\nResNet model: \nConfusion Matrix: \n{best_results["conf_mat_img"]}\n')
+        f.write(f'F1: {best_results["f1_img"]:.4f}, Precision: {best_results["precision_img"]:.4f}, Recall: {best_results["recall_img"]:.4f}\n')
+        f.write(f'Average loss: {best_results["test_loss_img"]:.4f}, Accuracy: {best_results["accuracy_img"]:.2f}%\n')
+
+    print(f'Best Test Accuracy: {best_accuracy:.2f}%')
+    print(f'Weight_topo: {best_weight_topo:.2f}')
+    print(f'Weight_img: {best_weight_img:.2f}\n')
+
+    print(f'Combined Model: \nConfusion Matrix: \n{best_results["conf_mat_combined"]}')
+    print(f'F1: {best_results["f1_combined"]:.4f}, Precision: {best_results["precision_combined"]:.4f}, Recall: {best_results["recall_combined"]:.4f}')
+    print(f'Average loss: {best_results["test_loss_combined"]:.4f}, Accuracy: {best_results["accuracy_combined"]:.2f}%\n')
+
+    print(f'TOPO model: \nConfusion Matrix: \n{best_results["conf_mat_topo"]}')
+    print(f'F1: {best_results["f1_topo"]:.4f}, Precision: {best_results["precision_topo"]:.4f}, Recall: {best_results["recall_topo"]:.4f}')
+    print(f'Average loss: {best_results["test_loss_topo"]:.4f}, Accuracy: {best_results["accuracy_topo"]:.2f}%\n')
+
+    print(f'ResNet model: \nConfusion Matrix: \n{best_results["conf_mat_img"]}')
+    print(f'F1: {best_results["f1_img"]:.4f}, Precision: {best_results["precision_img"]:.4f}, Recall: {best_results["recall_img"]:.4f}')
+    print(f'Average loss: {best_results["test_loss_img"]:.4f}, Accuracy: {best_results["accuracy_img"]:.2f}%\n')
 
 
 def test_fusion_models(config):
-    # get the test dataloader
-    combined_loader = read_data('test')
+    config_data = OmegaConf.load('config/config.yaml')['data']
+    combined_loader = read_data(config_data)
 
-    # get the save_path
     TOPOmodel_path = os.path.join(config['model_path'], 'topo_checkpoint.pt')
-    IMGmodel_path = os.path.join(config['model_path'], 'image_checkpoint.pt')
+    ResNetmodel_path = os.path.join(config['model_path'], 'image_checkpoint.pt')
 
-    # load the model
     TOPOmodel = torch.load(TOPOmodel_path)
-    IMGmodel = torch.load(IMGmodel_path)
+    ResNetmodel = torch.load(ResNetmodel_path)
 
-    # test the model
-    for pool_method in ['average', 'max']:
-        save_path = os.path.join(config['model_path'], pool_method+'fusion_test_results.txt')
-        test_fusion_model(TOPOmodel, IMGmodel, combined_loader, save_path=save_path, pool_method=pool_method)
+    save_path = os.path.join(config['model_path'], 'test_results.txt')
+
+    test_fusion_model(TOPOmodel, ResNetmodel, combined_loader, save_path=save_path)
 
 
 def test():
