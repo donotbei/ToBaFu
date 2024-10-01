@@ -12,7 +12,7 @@ Reference: Kather JN, Weis CA, Bianconi F, Melchers SM, Schad LR, Gaiser T, Marx
 
 
 The BUS-250 dataset. 
-The public dataset can be accessed at https://zenodo.org/records/53169. 
+The public dataset can be accessed at https://data.mendeley.com/datasets/wmy84gzngw/1. 
 It comprises 250 grayscale breast ultrasound images, including 100 benign samples and 150 malignant samples.
 Images are stored in *.bmp format. 
 Given different pixel sizes of the images—ranging from a minimum of 93 × 57 to a maximum of 199 × 161, we resize each original image size to 100 × 75.
