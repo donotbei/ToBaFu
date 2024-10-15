@@ -30,8 +30,8 @@ class LinearResNet(nn.Module):
 
         self.TopoNet.add_module('res_blocks', self.make_blocks(hidden_size, num_blocks))
         self.TopoNet.add_module('fc_out', nn.Sequential(
-            nn.Linear(hidden_size, num_classes),
             nn.Dropout(dropout_rate),
+            nn.Linear(hidden_size, num_classes),
         ))
 
     def make_blocks(self, hidden_size, num_blocks):
