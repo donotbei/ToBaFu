@@ -37,7 +37,7 @@ class ModifiedResNet50(nn.Module):
 
 
 # Define the function to get the model
-def get_Image_model(
+def get_Img_model(
         num_classes,
         dropout_rate,
 ):

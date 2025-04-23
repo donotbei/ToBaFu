@@ -1,17 +1,17 @@
-root_dir: /home/ud/ToBaFu/CRC_flie
-dataset: CRC5000
-topo_feature: CRC5000_F
+root_dir: /home/ud/ToBaFu/BUS_file
+dataset: BUS250
+topo_feature: BUS250_F
 
 data:
   data_dir: ${root_dir}/data/${dataset}
   feature_info: ${root_dir}/data/topo_features/${topo_feature}.csv
   train_size: 0.8
-  zero_count_threshold: 2500
+  zero_count_threshold: 125
   batch_size:
     topo_train: 256
     img_train: 256
-    test: 1000
-
+    test: 128
+ 
 train:
   topo_feature: ${topo_feature}
   ckpt_dir: ${root_dir}/experiment/
@@ -32,11 +32,11 @@ train:
     learning_rate: 1e-3
     lr_patience: 10
     lr_decay: 0.1
-    dropout_rate: 0.3
+    dropout_rate: 0.5
     patience: 50
 
 test:
-  model_path: ${root_dir}/experiment/CRC5000_F_2024-09-19_19-31-50/
+  model_path: ${root_dir}/experiment/BUS250_F_03-25-12-07-39/
   num_classes: ${train.num_classes}
   topo_model:
     input_size: ${train.topo.input_size}

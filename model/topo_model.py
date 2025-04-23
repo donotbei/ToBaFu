@@ -52,13 +52,13 @@ class LinearResNet(nn.Module):
 
 
 # 定义函数获取模型
-def get_TOPO_model(
+def get_Topo_model(
         input_size,
         num_classes,
         hidden_size,
         num_blocks,
         dropout_rate,
 ):
-    TOPO_model = LinearResNet(input_size, hidden_size, num_blocks, num_classes, dropout_rate)
-    TOPO_model.apply(TOPO_model.init_weights)
-    return TOPO_model
+    Topo_model = LinearResNet(input_size, hidden_size, num_blocks, num_classes, dropout_rate)
+    Topo_model.apply(Topo_model.init_weights)
+    return Topo_model

@@ -1,5 +1,4 @@
 # Combine Statistic features and PI features
-
 import pandas as pd
 
 
@@ -19,3 +18,4 @@ if __name__ == '__main__':
     # Combine Statistic and PI features
     merge_files('BUS250_PI.csv', 'BUS250_S.csv', 'BUS250_F.csv')
     merge_files('CRC5000_PI.csv', 'CRC5000_S.csv', 'CRC5000_F.csv')
+    merge_files('LC25000_PI.csv', 'LC25000_S.csv', 'LC25000_F.csv')

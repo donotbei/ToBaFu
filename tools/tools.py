@@ -41,11 +41,9 @@ class EarlyStopping:
         self.val_loss_min = val_loss
 
 
-# 定义可视化函数
 def visualize_losses(train_losses, val_losses, val_accuracies, learning_rates, gradient_norms, save_path):
     fig, axs = plt.subplots(2, 2, figsize=(12, 12))
 
-    # 将 Train Loss 和 Val Loss 画在同一个图上
     axs[0, 0].plot(train_losses, label='Train Loss')
     axs[0, 0].plot(val_losses, label='Val Loss')
     axs[0, 0].set_title('Train and Val Loss')
