@@ -1,0 +1,78 @@
+Best Test Accuracy: 99.98%
+Weight_Topo: 0.50
+Weight_ModifiedResNet: 0.50
+
+ToBaFu Model: 
+Confusion Matrix: 
+[[1000    0    0    0    0]
+ [   0 1000    0    0    0]
+ [   0    0  999    0    1]
+ [   0    0    0 1000    0]
+ [   0    0    0    0 1000]]
+F1: 0.9998, Precision: 0.9998, Recall: 0.9998
+Average loss: 0.0073, Accuracy: 99.98%
+
+Topo model: 
+Confusion Matrix: 
+[[1000    0    0    0    0]
+ [   1  999    0    0    0]
+ [   0    0  998    0    2]
+ [   0    0    0 1000    0]
+ [   0    0    0    0 1000]]
+F1: 0.9994, Precision: 0.9994, Recall: 0.9994
+Average loss: 0.0072, Accuracy: 99.94%
+
+ModifiedResNet Model: 
+Confusion Matrix: 
+[[1000    0    0    0    0]
+ [   0 1000    0    0    0]
+ [   0    0  995    0    5]
+ [   0    0    0 1000    0]
+ [   0    0    4    0  996]]
+F1: 0.9982, Precision: 0.9982, Recall: 0.9982
+Average loss: 0.0073, Accuracy: 99.82%
+
+
+Weight and Accuracy:
+
+Weight_Topo: 1.00,Weight_ModifiedResNet: 0.00, Accuracy: 99.94%
+
+Weight_Topo: 0.95,Weight_ModifiedResNet: 0.05, Accuracy: 99.94%
+
+Weight_Topo: 0.90,Weight_ModifiedResNet: 0.10, Accuracy: 99.94%
+
+Weight_Topo: 0.85,Weight_ModifiedResNet: 0.15, Accuracy: 99.96%
+
+Weight_Topo: 0.80,Weight_ModifiedResNet: 0.20, Accuracy: 99.96%
+
+Weight_Topo: 0.75,Weight_ModifiedResNet: 0.25, Accuracy: 99.96%
+
+Weight_Topo: 0.70,Weight_ModifiedResNet: 0.30, Accuracy: 99.96%
+
+Weight_Topo: 0.65,Weight_ModifiedResNet: 0.35, Accuracy: 99.96%
+
+Weight_Topo: 0.60,Weight_ModifiedResNet: 0.40, Accuracy: 99.96%
+
+Weight_Topo: 0.55,Weight_ModifiedResNet: 0.45, Accuracy: 99.96%
+
+Weight_Topo: 0.50,Weight_ModifiedResNet: 0.50, Accuracy: 99.98%
+
+Weight_Topo: 0.45,Weight_ModifiedResNet: 0.55, Accuracy: 99.96%
+
+Weight_Topo: 0.40,Weight_ModifiedResNet: 0.60, Accuracy: 99.92%
+
+Weight_Topo: 0.35,Weight_ModifiedResNet: 0.65, Accuracy: 99.92%
+
+Weight_Topo: 0.30,Weight_ModifiedResNet: 0.70, Accuracy: 99.92%
+
+Weight_Topo: 0.25,Weight_ModifiedResNet: 0.75, Accuracy: 99.88%
+
+Weight_Topo: 0.20,Weight_ModifiedResNet: 0.80, Accuracy: 99.84%
+
+Weight_Topo: 0.15,Weight_ModifiedResNet: 0.85, Accuracy: 99.84%
+
+Weight_Topo: 0.10,Weight_ModifiedResNet: 0.90, Accuracy: 99.84%
+
+Weight_Topo: 0.05,Weight_ModifiedResNet: 0.95, Accuracy: 99.82%
+
+Weight_Topo: 0.00,Weight_ModifiedResNet: 1.00, Accuracy: 99.82%

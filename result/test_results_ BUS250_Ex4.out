@@ -1,0 +1,70 @@
+Best Test Accuracy: 100.00%
+Weight_Topo: 0.55
+Weight_Img: 0.45
+
+ToBaFu Model: 
+Confusion Matrix: 
+[[30  0]
+ [ 0 20]]
+F1: 1.0000, Precision: 1.0000, Recall: 1.0000
+Average loss: 0.0071, Accuracy: 100.00%
+
+Topo Model: 
+Confusion Matrix: 
+[[29  1]
+ [ 1 19]]
+F1: 0.9667, Precision: 0.9667, Recall: 0.9667
+Average loss: 0.0065, Accuracy: 96.00%
+
+ModifiedResNet Model: 
+Confusion Matrix: 
+[[29  1]
+ [ 2 18]]
+F1: 0.9508, Precision: 0.9355, Recall: 0.9677
+Average loss: 0.0081, Accuracy: 94.00%
+
+
+Weight and Accuracy:
+
+Weight_Topo: 1.00,Weight_Img: 0.00, Accuracy: 96.00%
+
+Weight_Topo: 0.95,Weight_Img: 0.05, Accuracy: 96.00%
+
+Weight_Topo: 0.90,Weight_Img: 0.10, Accuracy: 96.00%
+
+Weight_Topo: 0.85,Weight_Img: 0.15, Accuracy: 98.00%
+
+Weight_Topo: 0.80,Weight_Img: 0.20, Accuracy: 98.00%
+
+Weight_Topo: 0.75,Weight_Img: 0.25, Accuracy: 98.00%
+
+Weight_Topo: 0.70,Weight_Img: 0.30, Accuracy: 98.00%
+
+Weight_Topo: 0.65,Weight_Img: 0.35, Accuracy: 98.00%
+
+Weight_Topo: 0.60,Weight_Img: 0.40, Accuracy: 98.00%
+
+Weight_Topo: 0.55,Weight_Img: 0.45, Accuracy: 100.00%
+
+Weight_Topo: 0.50,Weight_Img: 0.50, Accuracy: 100.00%
+
+Weight_Topo: 0.45,Weight_Img: 0.55, Accuracy: 100.00%
+
+Weight_Topo: 0.40,Weight_Img: 0.60, Accuracy: 96.00%
+
+Weight_Topo: 0.35,Weight_Img: 0.65, Accuracy: 96.00%
+
+Weight_Topo: 0.30,Weight_Img: 0.70, Accuracy: 96.00%
+
+Weight_Topo: 0.25,Weight_Img: 0.75, Accuracy: 96.00%
+
+Weight_Topo: 0.20,Weight_Img: 0.80, Accuracy: 96.00%
+
+Weight_Topo: 0.15,Weight_Img: 0.85, Accuracy: 96.00%
+
+Weight_Topo: 0.10,Weight_Img: 0.90, Accuracy: 96.00%
+
+Weight_Topo: 0.05,Weight_Img: 0.95, Accuracy: 94.00%
+
+Weight_Topo: 0.00,Weight_Img: 1.00, Accuracy: 94.00%
+
