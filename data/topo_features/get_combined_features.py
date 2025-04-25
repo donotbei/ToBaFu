@@ -5,7 +5,7 @@ import pandas as pd
 def merge_files(pi_path, topo_features_path, output_path):
     pi_test_df = pd.read_csv(pi_path)
     topo_features_test_df = pd.read_csv(topo_features_path)
-    topo_features_test_df = topo_features_test_df.iloc[:, :-61]
+    topo_features_test_df = topo_features_test_df.iloc[:, :-1]
     if 'image_path' in topo_features_test_df.columns:
         topo_features_test_df = topo_features_test_df.drop(columns=['image_path'])
     topo_features_test_df.insert(0, 'image_path', pi_test_df['image_path'])
