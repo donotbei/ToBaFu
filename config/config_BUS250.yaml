@@ -1,6 +1,7 @@
-root_dir: /home/ud/ToBaFu/BUS_file
+root_dir: /home/ud202080021/ToBaFu/BUS_file
 dataset: BUS250
 topo_feature: BUS250_F
+
 
 data:
   data_dir: ${root_dir}/data/${dataset}
@@ -10,30 +11,30 @@ data:
   batch_size:
     topo_train: 256
     img_train: 256
-    test: 128
+    test: 64
  
 train:
   topo_feature: ${topo_feature}
   ckpt_dir: ${root_dir}/experiment/
   topo:
     weight_decay: 1e-4
-    learning_rate: 1e-4
     num_epochs: 100
+    patience: 20
+    learning_rate: 1e-4
+    lr_patience: 10
+    lr_decay: 0.5
+    dropout_rate: 0.5
     num_blocks: 6
     hidden_size: 512
-    patience: 50
-    lr_patience: 10
-    lr_decay: 0.1
-    dropout_rate: 0.2
 
   img:
-    weight_decay: 0
-    num_epochs: 150
-    learning_rate: 1e-3
+    weight_decay: 0.05
+    num_epochs: 100
+    patience: 20
+    learning_rate: 1e-4
     lr_patience: 10
-    lr_decay: 0.1
+    lr_decay: 0.5
     dropout_rate: 0.5
-    patience: 50
 
 test:
   model_path: ${root_dir}/experiment/BUS250_F_03-25-12-07-39/

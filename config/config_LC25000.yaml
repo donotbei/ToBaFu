@@ -1,6 +1,7 @@
-root_dir: /home/ud/ToBaFu/LC_file
+root_dir: /home/ud202080021/ToBaFu/LC_file
 dataset: LC25000
 topo_feature: LC25000_F
+
 
 data:
   data_dir: ${root_dir}/data/${dataset}
@@ -9,7 +10,7 @@ data:
   zero_count_threshold: 12500
   batch_size:
     topo_train: 256
-    img_train: 64
+    img_train: 256
     test: 128
 
 train:
@@ -17,27 +18,27 @@ train:
   ckpt_dir: ${root_dir}/experiment/
   topo:
     weight_decay: 1e-4
-    learning_rate: 1e-4
     num_epochs: 100
+    patience: 20
+    learning_rate: 1e-4
+    lr_patience: 10
+    lr_decay: 0.5
+    dropout_rate: 0.2
     num_blocks: 6
     hidden_size: 512
-    patience: 50
-    lr_patience: 10
-    lr_decay: 0.1
-    dropout_rate: 0.2
 
   img:
-    weight_decay: 0
+    weight_decay: 1e-4
     num_epochs: 100
+    patience: 20
     learning_rate: 1e-3
     lr_patience: 10
-    lr_decay: 0.1
+    lr_decay: 0.5
     dropout_rate: 0.2
-    patience: 50
 
 test:
-  model_path: ${root_dir}/experiment/ToBaFu-0415-074015/
-  num_classes: 5
+  model_path: ${root_dir}/experiment/ToBaFu-0413-173520/
+  num_classes: ${train.num_classes}
   topo_model:
     input_size: ${train.topo.input_size}
     num_blocks: ${train.topo.num_blocks}
